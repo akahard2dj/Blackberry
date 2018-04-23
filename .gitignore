@@ -1,6 +1,10 @@
 # IntelliJ IDE Setting
 .idea/
 
+# Flask-migration and sqlite database
+migrations
+*.sqlite
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
