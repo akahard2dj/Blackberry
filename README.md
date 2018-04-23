@@ -4,5 +4,5 @@
 - python3 -m venv venv
 - source venv/bin/activate
 - (venv) pip install -r requirements.txt
-- python manager.py db upgrade
-- python manager.py runserver
+- export FLASK_APP=blackberry.py
+- flask run
