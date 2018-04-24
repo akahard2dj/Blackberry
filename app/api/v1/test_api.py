@@ -1,6 +1,6 @@
-from flask import jsonify, request, g, url_for, current_app
-from . import api
+from flask_restful import Resource
 
-@api.route('/')
-def hello():
-    return jsonify({'msg': 'success'})
+
+class TestApi(Resource):
+    def get(self):
+        return {'hello': 'world'}
