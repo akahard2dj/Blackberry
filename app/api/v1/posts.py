@@ -2,7 +2,6 @@ from flask_restful import Resource, fields, marshal_with, reqparse
 from flask import jsonify
 
 from app import db
-from app.models.post_dao import PostDAO
 from app.models.post import Post
 
 post_parser =reqparse.RequestParser()
