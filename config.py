@@ -12,20 +12,32 @@ class Config(object):
         pass
 
 
-class DevelopmentConfig(Config):
+class DevelopmentSQLiteConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
 
 
+class DevelopmentMySQLConfig(Config):
+    DEBUG = True
+    user = os.environ.get("MYSQL_USER")
+    passwd = os.environ.get("MYSQL_PASSWORD")
+    hostname = os.environ.get("MYSQL_HOSTNAME")
+    database = os.environ.get("MYSQL_DATABASE")
+    SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(user, passwd, hostname, database)
+
+
 class ProductionConfig(Config):
     DEBUG = False
-    # TODO: production database will be launched by MySQL
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
-
+    user = os.environ.get("MYSQL_USER")
+    passwd = os.environ.get("MYSQL_PASSWORD")
+    hostname = os.environ.get("MYSQL_HOSTNAME")
+    database = os.environ.get("MYSQL_DATABASE")
+    SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(user, passwd, hostname, database)
 
 config = {
-    'development': DevelopmentConfig,
+    'dev_sqlite': DevelopmentSQLiteConfig,
+    'dev_mysql': DevelopmentMySQLConfig,
     'production': ProductionConfig,
 
-    'default': DevelopmentConfig
+    'default': DevelopmentSQLiteConfig
 }
