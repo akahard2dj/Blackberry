@@ -3,4 +3,4 @@ Flask-RESTful==0.3.6
 Flask-SQLAlchemy==2.3.2
 Flask-Migrate==2.1.1
 flask-script==2.0.6
-pymysql-0.8.0
+pymysql==0.8.0
