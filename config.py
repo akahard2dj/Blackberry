@@ -23,7 +23,7 @@ class DevelopmentMySQLConfig(Config):
     passwd = os.environ.get("MYSQL_PASSWORD")
     hostname = os.environ.get("MYSQL_HOSTNAME")
     database = os.environ.get("MYSQL_DATABASE")
-    SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(user, passwd, hostname, database)
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(user, passwd, hostname, database)
 
 
 class ProductionConfig(Config):
@@ -32,7 +32,7 @@ class ProductionConfig(Config):
     passwd = os.environ.get("MYSQL_PASSWORD")
     hostname = os.environ.get("MYSQL_HOSTNAME")
     database = os.environ.get("MYSQL_DATABASE")
-    SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(user, passwd, hostname, database)
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(user, passwd, hostname, database)
 
 config = {
     'dev_sqlite': DevelopmentSQLiteConfig,

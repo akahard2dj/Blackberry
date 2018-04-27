@@ -12,4 +12,4 @@ class Board(db.Model):
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     title = db.Column(db.Text)
-    description = db.Column(db.String)
+    description = db.Column(db.String(128))
