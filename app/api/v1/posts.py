@@ -3,6 +3,7 @@ from flask import jsonify
 
 from app import db
 from app.models.post import Post
+from app.models.post_dao import PostDAO
 
 post_parser =reqparse.RequestParser()
 post_parser.add_argument(
