@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app import db
-from app.models.entity.board import Board
+
 
 class Article(db.Model):
     __tablename__ = 'articles'

@@ -1,4 +1,4 @@
-from app.models.post import Post
+from api.v1.models.post import Post
 
 
 class PostDTO(object):

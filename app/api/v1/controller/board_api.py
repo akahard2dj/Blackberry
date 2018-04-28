@@ -1,7 +1,6 @@
 from flask_restful import Resource, fields, marshal_with
 
-from app.models.entity.article import Article
-
+from app.api.v1.models.entity.article import Article
 
 post_fields = {
     'title': fields.String,

@@ -1,7 +1,7 @@
 import json
 
-from app.models.post import Post
-from app.models.post_dto import PostDTO
+from api.v1.models.post import Post
+from api.v1.models.post_dto import PostDTO
 
 
 class PostDAO(object):
