@@ -1,8 +1,8 @@
 from flask import jsonify
 from flask_restful import Resource, fields, marshal_with, reqparse
 
-from api.v1.models.post import Post
 from app import db
+from app.api.v1.models.post import Post
 
 post_parser = reqparse.RequestParser()
 post_parser.add_argument(
