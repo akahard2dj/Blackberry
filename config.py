@@ -34,6 +34,7 @@ class ProductionConfig(Config):
     database = os.environ.get("MYSQL_DATABASE")
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(user, passwd, hostname, database)
 
+
 config = {
     'dev_sqlite': DevelopmentSQLiteConfig,
     'dev_mysql': DevelopmentMySQLConfig,

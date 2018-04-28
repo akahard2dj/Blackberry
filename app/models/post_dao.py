@@ -3,8 +3,6 @@ import json
 from app.models.post import Post
 from app.models.post_dto import PostDTO
 
-from app import db
-
 
 class PostDAO(object):
     def __init__(self):
