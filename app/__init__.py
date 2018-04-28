@@ -2,15 +2,18 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from config import config
 
+
+# app 보다 먼저 정의 되어야 함
 db = SQLAlchemy()
-from app.api.v1.controller import api_bp
 
 
 def create_app(config_name):
+
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    from app.api.v1.controller import api_bp
     app.register_blueprint(api_bp, url_prefix='/api/v1')
 
     db.init_app(app)
