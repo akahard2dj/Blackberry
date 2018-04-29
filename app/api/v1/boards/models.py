@@ -1,16 +1,19 @@
+import enum
 from datetime import datetime
 
 from app import db
 
 
-class Board(db.Model):
+class BoardStatus(enum.Enum):
+    USE = 'USE',
+    DELETED = 'DELETED'
 
+
+class Board(db.Model):
     __tablename__ = 'boards'
     id = db.Column(db.Integer, primary_key=True)
-    # status index
-    # 0 - article, 1 - reported, 2 - deleted
-    status_index = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Enum(BoardStatus), default='USE')
     title = db.Column(db.Text)
     description = db.Column(db.String(128))
+    created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
