@@ -22,14 +22,12 @@ class ArticleView(Resource):
 
     @marshal_with(article_fields)
     def get(self, article_id):
-        """ 해당 게시판의 글 목록을 리턴한다.
+        """ 해당 게시글 리턴한다.
 
-        :param article_id: 게시판 아이디
-        :return: article 리스트
+        :param article_id: 게시글 아이디
+        :return: 게시글
         """
-        articles = Article.query.filter(Article.id==article_id).all()
-
-        return articles
+        return Article.query.filter(Article.id == article_id).first()
 
     def post(self):
         pass
@@ -52,13 +50,7 @@ class ArticleListView(Resource):
         """
 
         board_id = request.args.get('board_id')
-
-        articles = Article.query.filter(Article.board_id == board_id).all()
-
-        return articles
-
-    def post(self):
-        pass
+        return Article.query.filter(Article.board_id == board_id).all()
 
 
 article = Api(article_bp)
