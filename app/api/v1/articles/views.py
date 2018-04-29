@@ -9,13 +9,13 @@ article_bp = Blueprint('article', __name__)
 class ArticleView(Resource):
 
     article_fields = {
-        'status_index': fields.Integer,
+        'status': fields.String(attribute=lambda x: x.status.name),
         'board_id': fields.Integer,
         'title': fields.String,
         'body': fields.String,
         'hits_count': fields.Integer,
         'likes_count': fields.Integer,
-        'report_count': fields.Integer,
+        'dislike_count': fields.Integer,
         'created_at': fields.DateTime,
         'updated_at': fields.DateTime
     }
