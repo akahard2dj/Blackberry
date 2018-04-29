@@ -53,7 +53,7 @@ class ArticleListView(Resource):
 
         board_id = request.args.get('board_id')
 
-        articles = Article.query.filter(Article.board_id==board_id).all()
+        articles = Article.query.filter(Article.board_id == board_id).all()
 
         return articles
 
