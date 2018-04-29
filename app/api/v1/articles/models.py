@@ -40,7 +40,7 @@ class ArticleDAO(object):
         q = Article.query.all()
         posts = list()
         for p in q:
-            post_dto = PostDTO(p)
+            post_dto = ArticleDTO(p)
             posts.append(post_dto)
 
         return posts
@@ -55,4 +55,3 @@ class ArticleDAO(object):
         posts_json = json.dumps([ob.__dict__ for ob in articles])
 
         return json.loads(posts_json)
-    
