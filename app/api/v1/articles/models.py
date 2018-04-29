@@ -13,7 +13,7 @@ class Article(db.Model):
     status_index = db.Column(db.Integer, default=0)
     hits_count = db.Column(db.Integer, default=1)
     likes_count = db.Column(db.Integer, default=0)
-    report_count = db.Column(db.Integer, default=0)
+    dislike_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     title = db.Column(db.Text)
