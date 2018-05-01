@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_restful import Resource, fields, Api, marshal_with
 
-from app.api.v1.articles.exceptions import ArticleNotFoundException
+from app import db
+from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
 article_bp = Blueprint('article', __name__)
@@ -34,8 +35,21 @@ class ArticleView(Resource):
 
         return article
 
+
+class ArticleAdd(Resource):
+
     def post(self):
-        pass
+        data = request.json
+        board_id = request.args.get('board_id')
+        if not board_id:
+            raise BoardIdNotExistException('board_id is mandatory!')
+
+        article = Article(title=data['title'], body=data['body'], board_id=board_id)
+
+        db.session.add(article)
+        db.session.commit()
+
+        return {"id": article.id}
 
 
 class ArticleListView(Resource):
@@ -68,4 +82,5 @@ def handle_not_found_article_exception(error):
 article = Api(article_bp)
 article.add_resource(ArticleView, '/<int:article_id>')
 article.add_resource(ArticleListView, '')
+article.add_resource(ArticleAdd, '')
 
