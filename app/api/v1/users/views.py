@@ -1,10 +1,11 @@
 from flask import Blueprint, request
-from flask_restful import Api, marshal_with, fields, Resource
+from flask_restplus import Api, marshal_with, fields, Resource
 
 from app import db
 from app.api.v1.users.models import User
 
 user_bp = Blueprint('user', __name__)
+api = Api(user_bp)
 
 user_field = {
     'id': fields.Integer,
@@ -14,6 +15,7 @@ user_field = {
 }
 
 
+@api.route('/<int:user_id>')
 class UserSearchApi(Resource):
 
     @marshal_with(user_field)
@@ -21,6 +23,7 @@ class UserSearchApi(Resource):
         return User.query.filter(User.id == user_id).first()
 
 
+@api.route('')
 class UserRegistrationApi(Resource):
 
     def post(self):
@@ -34,8 +37,3 @@ class UserRegistrationApi(Resource):
         db.session.commit()
 
         return {"userId": user.id}
-
-
-user = Api(user_bp)
-user.add_resource(UserSearchApi, '/<int:user_id>')
-user.add_resource(UserRegistrationApi, '')

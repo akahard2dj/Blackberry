@@ -1,16 +1,14 @@
 from flask import Blueprint, request, jsonify
-from flask_restful import Resource, fields, Api, marshal_with
+from flask_restplus import Resource, fields, Api, marshal_with
 
 from app import db
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
 article_bp = Blueprint('article', __name__)
+api = Api(article_bp)
 
-
-class ArticleView(Resource):
-
-    article_fields = {
+article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
         'board_id': fields.Integer,
         'title': fields.String,
@@ -20,7 +18,17 @@ class ArticleView(Resource):
         'dislike_count': fields.Integer,
         'created_at': fields.DateTime,
         'updated_at': fields.DateTime
-    }
+}
+
+article_list_fields = {
+        'title': fields.String,
+        'hits_count': fields.Integer,
+        'created_at': fields.DateTime
+}
+
+
+@api.route('/<int:article_id>')
+class ArticleView(Resource):
 
     @marshal_with(article_fields)
     def get(self, article_id):
@@ -36,6 +44,7 @@ class ArticleView(Resource):
         return article
 
 
+@api.route('')
 class ArticleAdd(Resource):
 
     def post(self):
@@ -52,13 +61,8 @@ class ArticleAdd(Resource):
         return {"id": article.id}
 
 
+@api.route('')
 class ArticleListView(Resource):
-
-    article_list_fields = {
-        'title': fields.String,
-        'hits_count': fields.Integer,
-        'created_at': fields.DateTime
-    }
 
     @marshal_with(article_list_fields)
     def get(self):
@@ -77,10 +81,4 @@ def handle_not_found_article_exception(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
-
-
-article = Api(article_bp)
-article.add_resource(ArticleView, '/<int:article_id>')
-article.add_resource(ArticleListView, '')
-article.add_resource(ArticleAdd, '')
 

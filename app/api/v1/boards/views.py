@@ -1,11 +1,13 @@
 from flask import Blueprint
-from flask_restful import Resource, fields, Api, marshal_with
+from flask_restplus import Resource, fields, Api, marshal_with
 
 from app.api.v1.boards.models import Board
 
 board_bp = Blueprint('board', __name__)
+api = Api(board_bp)
 
 
+@api.route('/<int:board_id>')
 class BoardView(Resource):
 
     board_fields = {
@@ -25,7 +27,3 @@ class BoardView(Resource):
 
     def post(self):
         pass
-
-
-board = Api(board_bp)
-board.add_resource(BoardView, '/<int:board_id>')
