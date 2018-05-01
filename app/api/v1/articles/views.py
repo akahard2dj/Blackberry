@@ -1,6 +1,7 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from flask_restful import Resource, fields, Api, marshal_with
 
+from app.api.v1.articles.exceptions import ArticleNotFoundException
 from app.api.v1.articles.models import Article
 
 article_bp = Blueprint('article', __name__)
@@ -27,7 +28,11 @@ class ArticleView(Resource):
         :param article_id: 게시글 아이디
         :return: 게시글
         """
-        return Article.query.filter(Article.id == article_id).first()
+        article = Article.query.filter(Article.id == article_id).first()
+        if not article:
+            raise ArticleNotFoundException(f"No article found with articleId: {article_id}")
+
+        return article
 
     def post(self):
         pass
@@ -51,6 +56,13 @@ class ArticleListView(Resource):
 
         board_id = request.args.get('board_id')
         return Article.query.filter(Article.board_id == board_id).all()
+
+
+@article_bp.errorhandler(ArticleNotFoundException)
+def handle_not_found_article_exception(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
 
 
 article = Api(article_bp)
