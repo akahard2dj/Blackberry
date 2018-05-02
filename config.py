@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
-    SERCRET_KEY = 'hard to guess string'
+    SECRET_KEY = 'hard to guess string'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     @staticmethod
