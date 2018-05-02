@@ -2,7 +2,6 @@
 .idea/
 
 # Flask-migration and sqlite database
-migrations/
 *.sqlite
 
 
