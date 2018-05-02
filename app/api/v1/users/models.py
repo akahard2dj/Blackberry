@@ -1,6 +1,11 @@
 import enum
 from datetime import datetime
+
+from flask import current_app
+
 from passlib.hash import pbkdf2_sha256
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import SignatureExpired
 
 from app import db
 
@@ -41,3 +46,17 @@ class User(db.Model):
 
     def verify_password(self, password):
         return pbkdf2_sha256.verify(password, self.password_hash)
+
+    def generate_auth_token(self, expiration=7200):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+
+        return User.query.get(data['id'])
