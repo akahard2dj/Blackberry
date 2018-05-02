@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from flask_restplus import Resource, fields, Api, marshal_with
 
 from app import db
+from app.api.v1.authentications.authentication import auth
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
@@ -21,6 +22,7 @@ article_fields = {
 }
 
 article_list_fields = {
+        'id': fields.Integer,
         'title': fields.String,
         'hits_count': fields.Integer,
         'created_at': fields.DateTime
@@ -29,7 +31,8 @@ article_list_fields = {
 
 @api.route('/<int:article_id>')
 class ArticleView(Resource):
-
+    decorators = [auth.login_required]
+    
     @marshal_with(article_fields)
     def get(self, article_id):
         """ 해당 게시글 리턴한다.
@@ -37,9 +40,10 @@ class ArticleView(Resource):
         :param article_id: 게시글 아이디
         :return: 게시글
         """
+        print(g.current_user)
         article = Article.query.filter(Article.id == article_id).first()
         if not article:
-            raise ArticleNotFoundException(f"No article found with articleId: {article_id}")
+            raise ArticleNotFoundException("No article found with articleId: {}".format(article_id))
 
         return article
 
