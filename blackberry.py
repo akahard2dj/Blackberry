@@ -27,8 +27,6 @@ def initdb_dev():
 
     # Creation boards
     from app.api.v1.boards.models import Board
-    ''' title = db.Column(db.Text, nullable=False)
-    description = db.Column(db.String(128), nullable=False)'''
     board_free = Board(title='자유게시판', description='모두의 게시판')
     board_a = Board(title='에이대학교', description='에이 대학교')
     board_b = Board(title='비이대학교', description='비이 대학교')
