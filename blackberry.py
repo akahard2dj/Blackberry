@@ -27,14 +27,11 @@ def initdb_dev():
 
     # Creation boards
     from app.api.v1.boards.models import Board
-    board_free = Board(title='자유게시판', description='모두의 게시판')
-    board_a = Board(title='에이대학교', description='에이 대학교')
-    board_b = Board(title='비이대학교', description='비이 대학교')
-    board_c = Board(title='씨이대학교', description='씨이 대학교')
-    board_d = Board(title='디이대학교', description='디이 대학교')
-    db.session.add(board_free)
-    db.session.add(board_a)
-    db.session.add(board_b)
-    db.session.add(board_c)
-    db.session.add(board_d)
+    univ_all = University.query.all()
+    for univ in univ_all:
+        board = Board()
+        board.title = univ.name
+        board.description = univ.name
+        board.university.append(univ)
+        db.session.add(board)
     db.session.commit()
