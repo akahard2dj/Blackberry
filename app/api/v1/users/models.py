@@ -7,6 +7,8 @@ from passlib.hash import pbkdf2_sha256
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired
 
+from app.api.v1.boards.models import Board
+
 from app import db
 
 
@@ -27,6 +29,7 @@ class User(db.Model):
     status = db.Column(db.Enum(UserStatus), default='PENDING')
     username = db.Column(db.Text)
 
+    #TODO: university -> university_id
     university = db.Column(db.Integer, db.ForeignKey("universities.id"))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -68,3 +71,14 @@ class University(db.Model):
     code = db.Column(db.Integer, nullable=False, unique=True)
     name = db.Column(db.String(256), nullable=False)
     domain = db.Column(db.String(128), nullable=False)
+    boards = db.relationship("Board", secondary="university_board_tags")
+
+
+class UniversityBoardTags(db.Model):
+    __tablename__ = "university_board_tags"
+    id = db.Column(db.Integer, primary_key=True)
+    university_id = db.Column(db.Integer, db.ForeignKey("universities.id"))
+    board_id = db.Column(db.Integer, db.ForeignKey("boards.id"))
+
+    university = db.relationship(University, backref=db.backref("university_board_tags", cascade="all, delete-orphan"))
+    board = db.relationship(Board, backref=db.backref("university_board_tags", cascade="all, delete-orphan"))
