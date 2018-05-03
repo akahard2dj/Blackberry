@@ -1,13 +1,24 @@
 from flask import Blueprint, g
 from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPTokenAuth
 from flask_restplus import Api
 
 from app.api.v1.users.models import User
 from app.api.v1.authentications.errors import unauthorized
 
-auth = HTTPBasicAuth()
+auth = HTTPTokenAuth(scheme='Token')
 
 
+@auth.verify_token
+def verify_token(token):
+    #TODO: AuthenticationToken DB querying
+    print(token)
+    # TEMP USER
+    g.current_user = User.query.filter(User.id==2).first()
+    return True
+
+#TODO: HTTPAuth is deprecated.
+'''
 @auth.verify_password
 def verify_password(email_or_token, password):
     if password == '':
@@ -19,6 +30,7 @@ def verify_password(email_or_token, password):
         return False
     g.current_user = user
     return True
+'''
 
 
 @auth.error_handler
