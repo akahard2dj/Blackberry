@@ -26,8 +26,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(128))
     status = db.Column(db.Enum(UserStatus), default='PENDING')
     username = db.Column(db.Text)
-    # TODO: University Table is needed
-    university = db.Column(db.String(128))
+
+    university = db.Column(db.Integer, db.ForeignKey("universities.id"))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -60,3 +60,11 @@ class User(db.Model):
             return None
 
         return User.query.get(data['id'])
+
+
+class University(db.Model):
+    __tablename__ = 'universities'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.Integer, nullable=False, unique=True)
+    name = db.Column(db.String(256), nullable=False)
+    domain = db.Column(db.String(128), nullable=False)
