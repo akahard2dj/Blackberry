@@ -1,9 +1,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+from werkzeug.contrib.cache import SimpleCache
+
 from config import config
 
 db = SQLAlchemy()
+cache = SimpleCache()
 url_prefix = '/api/v1'
 
 
