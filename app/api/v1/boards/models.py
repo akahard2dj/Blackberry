@@ -17,6 +17,7 @@ class Board(db.Model):
     status = db.Column(db.Enum(BoardStatus), default='USE')
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.String(128), nullable=False)
+    university = db.relationship("University", secondary="university_board_tags")
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
