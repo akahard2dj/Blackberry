@@ -7,7 +7,8 @@ from app import cache
 from app import db
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import bad_request
-from app.api.v1.users.models import User
+from app.api.v1.users.models import User, University
+from app.api.v1.boards.models import UserBoardConnector
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -41,13 +42,16 @@ class EmailCheckApi(Resource):
             bad_request('Email Validation is failed')
 
         else:
-            #TODO: registration check & University checking
             #when the information of user is not changed(email, uuid), go to app first
             from_db_user = User.query.filter(User.email==email).first()
             if from_db_user is None:
-                #Userversity Checking
+                #University Checking
                 domain = email.split('@')[-1]
-                return jsonify({'domain': domain})
+                university_from_db = University.query.filter(University.domain==domain).first()
+                if university_from_db is None:
+                    return jsonify({'msg': "Requested University is Not Service"})
+                else:
+                    return jsonify({'msg': 'Email Check is completed'})
             else:
                 #already registered user
                 #email & password check -> tracing an alteration of phone or re-installed app
@@ -113,7 +117,15 @@ class ConfirmAuthKeyApi(Resource):
 
                     from_db_user = User.query.filter(User.email==email).first()
                     if from_db_user is None:
-                        new_user = User(email=email, password='test1234', username='randomkey')
+                        domain = email.split('@')[-1]
+                        university_from_db = University.query.filter(domain=domain).first()
+
+                        new_user = User()
+                        new_user.email = email
+                        new_user.password = 'test1234'
+                        new_user.username = 'randomid'
+                        new_user.university = university_from_db.id
+
                         db.session.add(new_user)
                         try:
                             db.session.commit()
@@ -152,6 +164,9 @@ class RegistrationApi(Resource):
                         #TODO: Registration
                         to_confirm_user = User.query.filter(User.email==email).first()
                         to_confirm_user.status = 'USE'
+
+                        #connector = UserBoardConnector()
+                        #connector.user_id = to_confirm_user.id
                         try:
                             db.session.commit()
                         except Exception as e:
