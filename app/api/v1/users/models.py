@@ -4,12 +4,14 @@ from datetime import datetime
 from flask import current_app
 
 from passlib.hash import pbkdf2_sha256
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from itsdangerous import SignatureExpired
+from passlib.hash import sha256_crypt
 
-from app.api.v1.boards.models import Board
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import JSONWebSignatureSerializer as JWS
 
 from app import db
+
+from app.api.v1.boards.models import Board
 
 
 class UserStatus(enum.Enum):
@@ -27,9 +29,10 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True)
     password_hash = db.Column(db.String(128))
     status = db.Column(db.Enum(UserStatus), default='PENDING')
+    # TODO: username should have an unique property
     username = db.Column(db.Text)
 
-    #TODO: university -> university_id
+    # TODO: university -> university_id
     university = db.Column(db.Integer, db.ForeignKey("universities.id"))
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -63,6 +66,21 @@ class User(db.Model):
             return None
 
         return User.query.get(data['id'])
+
+
+class UserToken(db.Model):
+    __tablename__ = 'tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(128), index=True, unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    is_issued = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def generate_token(self, salt):
+        s = JWS(secret_key=current_app.config['SECRET_KEY'], salt=salt)
+        payload = {'user_id': self.user_id}
+        self.token = s.dumps(payload)
 
 
 class University(db.Model):
