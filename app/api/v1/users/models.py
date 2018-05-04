@@ -4,13 +4,13 @@ from datetime import datetime
 from flask import current_app
 
 from passlib.hash import pbkdf2_sha256
-from passlib.hash import sha256_crypt
 
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from itsdangerous import JSONWebSignatureSerializer as JWS
+from itsdangerous import JSONWebSignatureSerializer
 
 from app import db
 
+from app.api.common.utils import random_digit_with_number
 from app.api.v1.boards.models import Board
 
 
@@ -53,10 +53,6 @@ class User(db.Model):
     def verify_password(self, password):
         return pbkdf2_sha256.verify(password, self.password_hash)
 
-    def generate_auth_token(self, expiration=7200):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -73,14 +69,21 @@ class UserToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(128), index=True, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    nonce = db.Column(db.String(8), nullable=False)
     is_issued = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def generate_token(self, salt):
-        s = JWS(secret_key=current_app.config['SECRET_KEY'], salt=salt)
+    def update_timestamp(self):
+        self.updated_at = datetime.utcnow()
+
+    def generate_token(self):
+        nonce = random_digit_with_number(length_of_values=8)
+        self.nonce = nonce
+        self.is_issued = False
+        s = JSONWebSignatureSerializer(secret_key=current_app.config['SECRET_KEY'], salt=nonce)
         payload = {'user_id': self.user_id}
-        self.token = s.dumps(payload)
+        self.token = s.dumps(payload).decode('utf-8')
 
 
 class University(db.Model):
