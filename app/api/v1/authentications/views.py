@@ -1,7 +1,7 @@
 import re
 
 from flask import Blueprint, g, jsonify, request
-from flask_restplus import Api, Resource, reqparse
+from flask_restplus import Api, Resource
 
 from app import cache
 from app import db
@@ -32,7 +32,7 @@ class TokenApi(Resource):
                 db.session.commit()
             except Exception as e:
                 bad_request("Internal Error")
-            return jsonify({'token': token.token})
+            return jsonify({'token': token.token, 'nonce': token.nonce})
         else:
             return jsonify({'msg': 'Token already has been issued'})
 
@@ -53,7 +53,7 @@ class EmailCheckApi(Resource):
 
         else:
             # when the information of user is not changed(email, uuid), go to app first
-            from_db_user = User.query.filter(User.email==email).first()
+            from_db_user = User.query.filter(User.email == email).first()
             if from_db_user is None:
                 # University Checking
                 domain = email.split('@')[-1]
@@ -126,11 +126,11 @@ class ConfirmAuthKeyApi(Resource):
                 auth_code_from_cache = res_from_cache['code']
                 if authcode == auth_code_from_cache:
                     cache.delete('auth_key:{}'.format(email))
-                    res_from_cache['status'] = 'CONFIRM'
-                    cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
-
                     from_db_user = User.query.filter(User.email == email).first()
                     if from_db_user is None:
+                        res_from_cache['status'] = 'CONFIRM'
+                        res_from_cache['usertype'] = 'NEW'
+                        cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
                         domain = email.split('@')[-1]
                         university_from_db = University.query.filter(domain == domain).first()
 
@@ -146,6 +146,10 @@ class ConfirmAuthKeyApi(Resource):
                             db.session.commit()
                         except Exception as e:
                             return bad_request('internal error')
+                    else:
+                        res_from_cache['status'] = 'CONFIRM'
+                        res_from_cache['usertype'] = 'OLD'
+                        cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
 
                     return jsonify({'msg': 'Success'})
                 else:
@@ -174,28 +178,53 @@ class RegistrationApi(Resource):
                 bad_request('Timed out : re-authentication is needed')
             else:
                 auth_code_from_cache = res_from_cache['code']
-                if int(authcode) == auth_code_from_cache:
+                if authcode == auth_code_from_cache:
                     if res_from_cache['status'] == 'CONFIRM':
-                        to_confirm_user = User.query.filter(User.email == email).first()
-                        to_confirm_user.status = 'USE'
+                        if res_from_cache['usertype'] == 'NEW':
+                            to_confirm_user = User.query.filter(User.email == email).first()
+                            to_confirm_user.status = 'USE'
 
-                        connector = UserBoardConnector()
-                        connector.user_id = to_confirm_user.id
+                            connector = UserBoardConnector()
+                            connector.user_id = to_confirm_user.id
 
-                        joined_boards = UniversityBoardTags.query.filter(
-                            UniversityBoardTags.university_id == to_confirm_user.university
-                        ).all()
+                            joined_boards = UniversityBoardTags.query.filter(
+                                UniversityBoardTags.university_id == to_confirm_user.university
+                            ).all()
 
-                        for joined_board in joined_boards:
-                            connector.set_board_id(joined_board.board_id)
+                            for joined_board in joined_boards:
+                                connector.set_board_id(joined_board.board_id)
 
-                        db.session.add(connector)
+                            db.session.add(connector)
 
-                        try:
+                            token = UserToken()
+                            token.user_id = to_confirm_user.id
+                            token.generate_token()
+                            db.session.add(token)
+
+                            res_from_cache['status'] = 'REGISTER'
+                            cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
+
+                            try:
+                                db.session.commit()
+                            except Exception as e:
+                                return bad_request('internal error')
+                            return jsonify({'msg': 'registration is ok'})
+                        if res_from_cache['usertype'] == 'OLD':
+                            registered_user = User.query.filter(User.email == email).first()
+                            user_token = UserToken.query.filter(UserToken.user_id == registered_user.id).first()
+                            if not user_token:
+                                token = UserToken()
+                                token.user_id = registered_user.id
+                                token.generate_token()
+                                db.session.add(token)
+                            else:
+                                user_token.generate_token()
+
+                            res_from_cache['status'] = 'REGISTER'
+                            cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
+
                             db.session.commit()
-                        except Exception as e:
-                            return bad_request('internal error')
-                        return jsonify({'msg': 'registration is ok'})
+                            return jsonify({'msg': 'registration is ok'})
                     else:
                         bad_request('auth code is not confirmed')
 
