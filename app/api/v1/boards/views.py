@@ -1,7 +1,9 @@
-from flask import Blueprint
+from flask import Blueprint, g
 from flask_restplus import Resource, fields, Api, marshal_with
 
-from app.api.v1.boards.models import Board
+from app.api.v1.authentications.authentication import auth
+from app.api.v1.authentications.errors import forbidden
+from app.api.v1.boards.models import Board, UserBoardConnector
 
 board_bp = Blueprint('board', __name__)
 api = Api(board_bp)
@@ -9,6 +11,7 @@ api = Api(board_bp)
 
 @api.route('/<int:board_id>')
 class BoardView(Resource):
+    decorators = [auth.login_required]
 
     board_fields = {
         'id': fields.Integer,
@@ -23,7 +26,9 @@ class BoardView(Resource):
         :param board_id: 게시판 아이디
         :return: 게시판
         """
-        return Board.query.filter(Board.id == board_id).first()
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
+        if connector.check_board_id(board_id):
+            return Board.query.filter(Board.id == board_id).first()
+        else:
+            forbidden("Permission denied")
 
-    def post(self):
-        pass
