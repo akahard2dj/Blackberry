@@ -3,6 +3,8 @@ from flask_restplus import Resource, fields, Api, marshal_with
 
 from app import db
 from app.api.v1.authentications.authentication import auth
+from app.api.v1.authentications.errors import forbidden
+from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
@@ -40,12 +42,16 @@ class ArticleView(Resource):
         :param article_id: 게시글 아이디
         :return: 게시글
         """
-        print(g.current_user)
         article = Article.query.filter(Article.id == article_id).first()
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
+
         if not article:
             raise ArticleNotFoundException("No article found with articleId: {}".format(article_id))
-
-        return article
+        else:
+            if connector.check_board_id(article.board_id):
+                return article
+            else:
+                forbidden('Permission denied')
 
 
 @api.route('')
@@ -67,6 +73,7 @@ class ArticleAdd(Resource):
 
 @api.route('')
 class ArticleListView(Resource):
+    decorators = [auth.login_required]
 
     @marshal_with(article_list_fields)
     def get(self):
@@ -75,9 +82,14 @@ class ArticleListView(Resource):
         :param board_id: 게시판 아이디
         :return: article 리스트
         """
-
         board_id = request.args.get('board_id')
-        return Article.query.filter(Article.board_id == board_id).all()
+
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
+        if connector.check_board_id(board_id):
+            # TODO: pagination is needed
+            return Article.query.filter(Article.board_id == board_id).all()
+        else:
+            forbidden("Permission denied")
 
 
 @article_bp.errorhandler(ArticleNotFoundException)
