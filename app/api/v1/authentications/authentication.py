@@ -1,7 +1,6 @@
-from flask import Blueprint, g
+from flask import g
 from flask_httpauth import HTTPBasicAuth
 from flask_httpauth import HTTPTokenAuth
-from flask_restplus import Api
 
 from app.api.v1.users.models import User
 from app.api.v1.users.models import UserToken
