@@ -5,9 +5,12 @@ from flask_restplus import Api, Resource, reqparse
 
 from app import cache
 from app import db
-from app.api.v1.authentications.authentication import auth
+
+from app.api.common.utils import random_digit_with_number, random_number
+
+from app.api.v1.authentications.authentication import auth_basic
 from app.api.v1.authentications.errors import bad_request
-from app.api.v1.users.models import User, University
+from app.api.v1.users.models import User, University, UniversityBoardTags, UserToken
 from app.api.v1.boards.models import UserBoardConnector
 
 
@@ -17,14 +20,21 @@ api = Api(auth_bp)
 
 @api.route('/token')
 class TokenApi(Resource):
-    decorators = [auth.login_required]
+    decorators = [auth_basic.login_required]
 
-    #TODO: this function is will be entirely changed to Token base authentication(not timed token)
+    # TODO: this function is will be entirely changed to Token base authentication(not timed token)
+    # TODO: caching check system is needed
     def get(self):
-        expiration = 3600
-        token = g.current_user.generate_auth_token(expiration=expiration).decode("utf-8")
-
-        return jsonify({'token': token, 'expiration': expiration})
+        token = UserToken.query.filter(UserToken.user_id == g.current_user.id).first()
+        if not token.is_issued:
+            token.is_issued = True
+            try:
+                db.session.commit()
+            except Exception as e:
+                bad_request("Internal Error")
+            return jsonify({'token': token.token})
+        else:
+            return jsonify({'msg': 'Token already has been issued'})
 
 
 @api.route('/email-check')
@@ -33,7 +43,7 @@ class EmailCheckApi(Resource):
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 
     def get(self):
-        #TODO: uuid argument is needed
+        # TODO: uuid argument is needed
         email = request.args.get('email')
         if not email:
             bad_request('No email')
@@ -42,20 +52,22 @@ class EmailCheckApi(Resource):
             bad_request('Email Validation is failed')
 
         else:
-            #when the information of user is not changed(email, uuid), go to app first
+            # when the information of user is not changed(email, uuid), go to app first
             from_db_user = User.query.filter(User.email==email).first()
             if from_db_user is None:
-                #University Checking
+                # University Checking
                 domain = email.split('@')[-1]
-                university_from_db = University.query.filter(University.domain==domain).first()
+                university_from_db = University.query.filter(University.domain == domain).first()
                 if university_from_db is None:
                     return jsonify({'msg': "Requested University is Not Service"})
                 else:
                     return jsonify({'msg': 'Email Check is completed'})
             else:
-                #already registered user
-                #email & password check -> tracing an alteration of phone or re-installed app
+                # already registered user
+                # email & password check -> tracing an alteration of phone or re-installed app
                 is_alteration = from_db_user.verify_password('test1234')
+                if not is_alteration:
+                    return jsonify({'msg': 'device is changed'})
                 from_db_user.status = "PENDING"
                 try:
                     db.session.commit()
@@ -82,9 +94,11 @@ class GenerateAuthKeyApi(Resource):
             else:
                 auth_key_status = dict()
                 # TODO : auth code is needed to be random function
-                auth_key_status['code'] = 1234
+                auth_key_status['code'] = random_number()
                 auth_key_status['status'] = 'SENT'
+                # TODO: timeout variable should contain in app config
                 cache.set('auth_key:{}'.format(email), auth_key_status, timeout=600)
+                print('## TEMP LOG: code - {}'.format(auth_key_status['code']), type(auth_key_status['code']))
                 return jsonify({'msg': 'auth key is generated'})
 
 
@@ -110,20 +124,21 @@ class ConfirmAuthKeyApi(Resource):
                 bad_request('Timed out : re-authentication is needed')
             else:
                 auth_code_from_cache = res_from_cache['code']
-                if int(authcode) == auth_code_from_cache:
+                if authcode == auth_code_from_cache:
                     cache.delete('auth_key:{}'.format(email))
                     res_from_cache['status'] = 'CONFIRM'
                     cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
 
-                    from_db_user = User.query.filter(User.email==email).first()
+                    from_db_user = User.query.filter(User.email == email).first()
                     if from_db_user is None:
                         domain = email.split('@')[-1]
-                        university_from_db = University.query.filter(domain=domain).first()
+                        university_from_db = University.query.filter(domain == domain).first()
 
                         new_user = User()
                         new_user.email = email
                         new_user.password = 'test1234'
-                        new_user.username = 'randomid'
+                        # TODO: username uniqueness check is needed
+                        new_user.username = random_digit_with_number()
                         new_user.university = university_from_db.id
 
                         db.session.add(new_user)
@@ -161,12 +176,21 @@ class RegistrationApi(Resource):
                 auth_code_from_cache = res_from_cache['code']
                 if int(authcode) == auth_code_from_cache:
                     if res_from_cache['status'] == 'CONFIRM':
-                        #TODO: Registration
-                        to_confirm_user = User.query.filter(User.email==email).first()
+                        to_confirm_user = User.query.filter(User.email == email).first()
                         to_confirm_user.status = 'USE'
 
-                        #connector = UserBoardConnector()
-                        #connector.user_id = to_confirm_user.id
+                        connector = UserBoardConnector()
+                        connector.user_id = to_confirm_user.id
+
+                        joined_boards = UniversityBoardTags.query.filter(
+                            UniversityBoardTags.university_id == to_confirm_user.university
+                        ).all()
+
+                        for joined_board in joined_boards:
+                            connector.set_board_id(joined_board.board_id)
+
+                        db.session.add(connector)
+
                         try:
                             db.session.commit()
                         except Exception as e:
