@@ -25,6 +25,7 @@ class Article(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+'''
 class ArticleDTO(object):
     def __init__(self, p: Article):
         self.id = p.id
@@ -54,4 +55,4 @@ class ArticleDAO(object):
 
         posts_json = json.dumps([ob.__dict__ for ob in articles])
 
-        return json.loads(posts_json)
+        return json.loads(posts_json)'''
