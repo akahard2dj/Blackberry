@@ -40,6 +40,7 @@ class TokenApi(Resource):
 @api.route('/email-check')
 class EmailCheckApi(Resource):
 
+    # TODO: WTForm library
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 
     def get(self):

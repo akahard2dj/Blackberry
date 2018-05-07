@@ -101,6 +101,7 @@ class University(db.Model):
     boards = db.relationship("Board", secondary="university_board_tags")
 
 
+# TODO: SQLAlchemy ORM: foreignkey, manytomany field are not recommened.
 # Tags? 왜 XXXTags인지 주석 추가 좀 부탁 드려요~
 class UniversityBoardTags(db.Model):
     __tablename__ = "university_board_tags"

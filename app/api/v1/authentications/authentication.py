@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, jsonify
 from flask_httpauth import HTTPBasicAuth
 from flask_httpauth import HTTPTokenAuth
 
@@ -27,7 +27,8 @@ def verify_token(token):
 
 @auth.error_handler
 def auth_error():
-    return unauthorized('Invalid credentials')
+    return jsonify({'code': 'USER_NOT_EXISTS', 'data': None}), 403
+    #return unauthorized('Invalid credentials')
 
 
 @auth_basic.verify_password
