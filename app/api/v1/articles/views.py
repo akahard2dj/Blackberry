@@ -9,7 +9,7 @@ from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotE
 from app.api.v1.articles.models import Article
 
 article_bp = Blueprint('article', __name__)
-api = Api(article_bp)
+api = Api(article_bp, doc='/doc/')
 
 article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
