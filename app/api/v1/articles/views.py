@@ -8,6 +8,7 @@ from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
+
 article_bp = Blueprint('article', __name__)
 api = Api(article_bp, doc='/doc/')
 
@@ -32,9 +33,13 @@ article_list_fields = {
 
 
 @api.route('/<int:article_id>')
+@api.header('Authorization', 'Token', required=True)
 class ArticleView(Resource):
     decorators = [auth.login_required]
-    
+    parser = api.parser()
+    parser.add_argument('board_id', type=int)
+
+    @api.expect(parser)
     @marshal_with(article_fields)
     def get(self, article_id):
         """ 해당 게시글 리턴한다.
@@ -54,27 +59,19 @@ class ArticleView(Resource):
                 forbidden('Permission denied')
 
 
-@api.route('')
-class ArticleAdd(Resource):
-
-    def post(self):
-        data = request.json
-        board_id = request.args.get('board_id')
-        if not board_id:
-            raise BoardIdNotExistException('board_id is mandatory!')
-
-        article = Article(title=data['title'], body=data['body'], board_id=board_id)
-
-        db.session.add(article)
-        db.session.commit()
-
-        return {"id": article.id}
-
-
-@api.route('')
+@api.route('/')
+@api.header('Authorization', 'Token', required=True)
 class ArticleListView(Resource):
     decorators = [auth.login_required]
+    parser = api.parser()
+    parser.add_argument('board_id', type=int)
 
+    resource_fields = api.model('Resource', {
+        'title': fields.String,
+        'body': fields.String,
+    })
+
+    @api.expect(parser)
     @marshal_with(article_list_fields)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다.
@@ -90,6 +87,26 @@ class ArticleListView(Resource):
             return Article.query.filter(Article.board_id == board_id).all()
         else:
             forbidden("Permission denied")
+
+    @api.expect(parser, resource_fields)
+    def post(self):
+        """
+        게시판에 글을 작성한다
+
+        :param board_id: 게시판 아이디
+        :return:
+        """
+        data = request.json
+        board_id = request.args.get('board_id')
+        if not board_id:
+            raise BoardIdNotExistException('board_id is mandatory!')
+
+        article = Article(title=data['title'], body=data['body'], board_id=board_id)
+
+        db.session.add(article)
+        db.session.commit()
+
+        return {"id": article.id}
 
 
 @article_bp.errorhandler(ArticleNotFoundException)
