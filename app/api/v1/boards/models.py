@@ -22,12 +22,14 @@ class Board(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+# 테이블 이름을 user_board_connectors로 바꾸면 좋겠네요~
 class UserBoardConnector(db.Model):
     __tablename__ = 'connectors'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     board_id_str = db.Column(db.Text)
 
+    # set_xx 메소드를 사용할건지 @board_id.setter를 사용할지 정하고 한 가지 방식을 쓰는게 안헷갈릴것 같네요~
     def set_board_id(self, board_id):
         value = self.board_id_str
         if not value:
@@ -45,6 +47,7 @@ class UserBoardConnector(db.Model):
             db.session.rollback()
             raise exc.SQLAlchemyError
 
+    # get_xx 메소드를 사용할 것인지 아니면 @getter를 사용할지 정하고 한 가지 방식을 쓰는게 안헷갈릴것 같네요~
     def get_board_id(self):
         value = self.board_id_str
         return list(map(int, value.split(',')[:-1]))
@@ -64,11 +67,7 @@ class UserBoardConnector(db.Model):
                 raise exc.SQLAlchemyError
 
     def check_board_id(self, board_id):
-        board_id = int(board_id)
-
-        value = self.board_id_str
-        if not value:
+        if not self.board_id_str:
             return False
-        else:
-            id_list = list(map(int, value.split(',')[:-1]))
-            return board_id in id_list
+
+        return board_id in set(self.board_id_str.split(',')[:-1])
