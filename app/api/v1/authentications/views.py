@@ -1,9 +1,9 @@
 import re
 
-from flask import Blueprint, g, jsonify, request
-from flask_restplus import Api, Resource
+from flask import g, jsonify, request
+from flask_restplus import Resource
 
-from app import cache
+from app import cache, api_holder
 from app import db
 
 from app.api.common.utils import random_digit_with_number, random_number
@@ -13,12 +13,10 @@ from app.api.v1.authentications.errors import bad_request
 from app.api.v1.users.models import User, University, UniversityBoardTags, UserToken
 from app.api.v1.boards.models import UserBoardConnector
 
-
-auth_bp = Blueprint('auth', __name__)
-api = Api(auth_bp)
+api = api_holder[0]
 
 
-@api.route('/token')
+@api.route('/auth/token')
 class TokenApi(Resource):
     decorators = [auth_basic.login_required]
 
@@ -37,7 +35,7 @@ class TokenApi(Resource):
             return jsonify({'msg': 'Token already has been issued'})
 
 
-@api.route('/email-check')
+@api.route('/auth/email-check')
 class EmailCheckApi(Resource):
 
     # TODO: WTForm library
@@ -77,7 +75,7 @@ class EmailCheckApi(Resource):
                 return jsonify({'msg': 'already registered user'})
 
 
-@api.route('/gen-auth-key')
+@api.route('/auth/gen-auth-key')
 class GenerateAuthKeyApi(Resource):
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 
@@ -103,7 +101,7 @@ class GenerateAuthKeyApi(Resource):
                 return jsonify({'msg': 'auth key is generated'})
 
 
-@api.route('/confirm-auth-key')
+@api.route('/auth/confirm-auth-key')
 class ConfirmAuthKeyApi(Resource):
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 
@@ -157,7 +155,7 @@ class ConfirmAuthKeyApi(Resource):
                     return bad_request('invalid auth_code')
 
 
-@api.route('/registration')
+@api.route('/auth/registration')
 class RegistrationApi(Resource):
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 

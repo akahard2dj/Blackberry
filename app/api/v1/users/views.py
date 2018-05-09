@@ -1,16 +1,15 @@
 import re
 
-from flask import Blueprint, request, g
-from flask_restplus import Api, marshal_with, fields, Resource, reqparse
+from flask import g
+from flask_restplus import marshal_with, fields, Resource, reqparse
 
-from app import db
+from app import db, api_holder
 from app.api.v1.users.models import User
 
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden, unauthorized, bad_request
 
-user_bp = Blueprint('user', __name__)
-api = Api(user_bp)
+api = api_holder[0]
 
 user_field = {
     'id': fields.Integer,
@@ -26,7 +25,7 @@ user_register_parser.add_argument('email')
 user_register_parser.add_argument('password')
 
 
-@api.route('/<int:user_id>')
+@api.route('/users/<int:user_id>')
 class UserSearchApi(Resource):
     decorators = [auth.login_required]
 
@@ -38,7 +37,7 @@ class UserSearchApi(Resource):
             forbidden('Invalid User ID')
 
 
-@api.route('')
+@api.route('/users')
 class UserRegistrationApi(Resource):
     EMAIL_REGEX = re.compile("[^@]+@[^@]+\.[^@]+")
 

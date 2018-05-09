@@ -1,15 +1,16 @@
-from flask import Blueprint, g
-from flask_restplus import Resource, fields, Api, marshal_with
+from flask import g
+from flask_restplus import Resource, fields, marshal_with
 
+from app import api_holder
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import Board, UserBoardConnector
 
-board_bp = Blueprint('board', __name__)
-api = Api(board_bp)
+
+api = api_holder[0]
 
 
-@api.route('/<int:board_id>')
+@api.route('/boards/<int:board_id>')
 class BoardView(Resource):
     decorators = [auth.login_required]
 

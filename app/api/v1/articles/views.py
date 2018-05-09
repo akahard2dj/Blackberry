@@ -1,16 +1,14 @@
-from flask import Blueprint, request, jsonify, g
-from flask_restplus import Resource, fields, Api, marshal_with
+from flask import request, jsonify, g
+from flask_restplus import Resource, fields, marshal_with
 
-from app import db
+from app import db, api_holder
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
-
-article_bp = Blueprint('article', __name__)
-api = Api(article_bp, doc='/doc/')
+api = api_holder[0]
 
 article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
@@ -32,7 +30,7 @@ article_list_fields = {
 }
 
 
-@api.route('/<int:article_id>')
+@api.route('/articles/<int:article_id>')
 @api.header('Authorization', 'Token', required=True)
 class ArticleView(Resource):
     decorators = [auth.login_required]
@@ -59,7 +57,7 @@ class ArticleView(Resource):
                 forbidden('Permission denied')
 
 
-@api.route('/')
+@api.route('/articles')
 @api.header('Authorization', 'Token', required=True)
 class ArticleListView(Resource):
     decorators = [auth.login_required]
@@ -109,7 +107,7 @@ class ArticleListView(Resource):
         return {"id": article.id}
 
 
-@article_bp.errorhandler(ArticleNotFoundException)
+@api.errorhandler(ArticleNotFoundException)
 def handle_not_found_article_exception(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code

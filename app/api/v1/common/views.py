@@ -1,22 +1,25 @@
-from flask import Blueprint, jsonify
+from flask import jsonify
+from flask_restplus import Resource
 
-from app import cache
+from app import cache, api_holder
 
-common_bp = Blueprint('common', __name__)
-
-
-@common_bp.route('/hello')
-def hello():
-    return "hello"
+api = api_holder[0]
 
 
-@common_bp.route('/cache-test')
-def cache_test():
-    rv = cache.get('my-item')
-    print(rv)
-    if rv is None:
-        rv = 100
-        cache.set('my-item', rv, timeout=60)
+@api.route('/hello')
+class Hello(Resource):
+    def get(self):
+        return 'hello'
+
+
+@api.route('/cache-test')
+class CacheTest(Resource):
+    def get(self):
+        rv = cache.get('my-item')
         print(rv)
+        if rv is None:
+            rv = 100
+            cache.set('my-item', rv, timeout=60)
+            print(rv)
 
-    return jsonify({'value': rv})
+        return jsonify({'value': rv})
