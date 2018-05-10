@@ -3,13 +3,13 @@ import re
 from flask import g
 from flask_restplus import marshal_with, fields, Resource, reqparse
 
-from app import db, api_holder
+from app import db, get_api
 from app.api.v1.users.models import User
 
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden, unauthorized, bad_request
 
-api = api_holder[0]
+api = get_api()
 
 user_field = {
     'id': fields.Integer,

@@ -8,7 +8,11 @@ from config import config
 
 db = SQLAlchemy()
 cache = SimpleCache()
-api_holder = []
+_api_holder = []
+
+
+def get_api():
+    return _api_holder[0]
 
 
 def create_app(config_name):
@@ -22,7 +26,7 @@ def create_app(config_name):
               default_label='전체 리스트',
               doc='/docs')
     app.register_blueprint(api_blueprint)
-    api_holder.append(api)
+    _api_holder.append(api)
 
     from app.api.v1.common.views import api
     from app.api.v1.articles.views import api

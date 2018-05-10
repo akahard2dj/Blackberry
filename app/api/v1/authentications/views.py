@@ -3,7 +3,7 @@ import re
 from flask import g, jsonify, request
 from flask_restplus import Resource
 
-from app import cache, api_holder
+from app import cache, get_api
 from app import db
 
 from app.api.common.utils import random_digit_with_number, random_number
@@ -13,7 +13,7 @@ from app.api.v1.authentications.errors import bad_request
 from app.api.v1.users.models import User, University, UniversityBoardTags, UserToken
 from app.api.v1.boards.models import UserBoardConnector
 
-api = api_holder[0]
+api = get_api()
 
 
 @api.route('/auth/token')

@@ -1,9 +1,9 @@
 from flask import jsonify
 from flask_restplus import Resource
 
-from app import cache, api_holder
+from app import cache, get_api
 
-api = api_holder[0]
+api = get_api()
 
 
 @api.route('/hello')

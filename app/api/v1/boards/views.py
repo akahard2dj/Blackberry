@@ -1,13 +1,13 @@
 from flask import g
 from flask_restplus import Resource, fields, marshal_with
 
-from app import api_holder
+from app import get_api
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import Board, UserBoardConnector
 
 
-api = api_holder[0]
+api = get_api()
 
 
 @api.route('/boards/<int:board_id>')

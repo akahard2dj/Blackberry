@@ -1,14 +1,14 @@
 from flask import request, jsonify, g
 from flask_restplus import Resource, fields, marshal_with
 
-from app import db, api_holder
+from app import db, get_api
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
 
-api = api_holder[0]
+api = get_api()
 
 article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
