@@ -18,7 +18,9 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     api_blueprint = Blueprint('api', __name__, url_prefix='/api/v1')
-    api = Api(api_blueprint)
+    api = Api(api_blueprint, title='Blackberry', default='API',
+              default_label='전체 리스트',
+              doc='/docs')
     app.register_blueprint(api_blueprint)
     api_holder.append(api)
 
