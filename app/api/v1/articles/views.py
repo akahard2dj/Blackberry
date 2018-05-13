@@ -50,11 +50,11 @@ class ArticleView(Resource):
 
         if not article:
             raise ArticleNotFoundException("No article found with articleId: {}".format(article_id))
-        else:
-            if connector.check_board_id(article.board_id):
-                return article
-            else:
-                forbidden('Permission denied')
+
+        if not connector.check_board_id(article.board_id):
+            forbidden('Permission denied')
+
+        return article
 
 
 @api.route('/articles')
@@ -80,11 +80,13 @@ class ArticleListView(Resource):
         board_id = request.args.get('board_id')
 
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-        if connector.check_board_id(board_id):
-            # TODO: pagination is needed
-            return Article.query.filter(Article.board_id == board_id).all()
-        else:
+        # TODO: connector 가 None 일 때 처리 필요
+
+        if not connector.check_board_id(board_id):
             forbidden("Permission denied")
+
+        # TODO: pagination is needed
+        return Article.query.filter(Article.board_id == board_id).all()
 
     @api.expect(parser, resource_fields)
     def post(self):
