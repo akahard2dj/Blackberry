@@ -24,6 +24,7 @@ class DevelopmentMySQLConfig(Config):
     hostname = os.environ.get("MYSQL_HOSTNAME")
     database = os.environ.get("MYSQL_DATABASE")
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(user, passwd, hostname, database)
+    SQLALCHEMY_ECHO = True
 
 
 class ProductionConfig(Config):
