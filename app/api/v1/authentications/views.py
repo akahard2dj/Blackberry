@@ -191,7 +191,7 @@ class RegistrationApi(Resource):
                             ).all()
 
                             for joined_board in joined_boards:
-                                connector.set_board_id(joined_board.board_id)
+                                connector.board_id(joined_board.board_id)
 
                             db.session.add(connector)
 
