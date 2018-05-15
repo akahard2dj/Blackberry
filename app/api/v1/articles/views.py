@@ -29,6 +29,16 @@ article_list_fields = {
         'created_at': fields.DateTime
 }
 
+article_response = {
+    'msg': fields.String,
+    'items': fields.Nested(article_fields)
+}
+
+article_list_response = {
+    'msg': fields.String,
+    'items': fields.List(fields.Nested(article_list_fields))
+}
+
 
 @api.route('/articles/<int:article_id>')
 @api.header('Authorization', 'Token', required=True)
@@ -39,7 +49,7 @@ class ArticleView(Resource):
 
     @api.expect(parser)
     @marshal_with(article_fields)
-    def get(self, article_id):
+    def get(self, article_id: int):
         """ 해당 게시글 리턴한다.
 
         :param article_id: 게시글 아이디
@@ -58,7 +68,7 @@ class ArticleView(Resource):
 
 
 @api.route('/articles')
-@api.header('Authorization', 'Token', required=True)
+@api.header('Authorization', '발급된 사용자 토큰', required=True)
 class ArticleListView(Resource):
     decorators = [auth.login_required]
     parser = api.parser()
@@ -70,23 +80,33 @@ class ArticleListView(Resource):
     })
 
     @api.expect(parser)
-    @marshal_with(article_list_fields)
+    @marshal_with(article_list_response)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다.
 
         :param board_id: 게시판 아이디
-        :return: article 리스트
+        :return: article list(msg, items)
         """
         board_id = request.args.get('board_id')
 
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-        # TODO: connector 가 None 일 때 처리 필요
+
+        output_dict = dict()
+        # TODO: connector 가 None 일 때 처리 필요 -> solved
+        if connector is None:
+            output_dict['msg'] = 'permission denied: There is no user data on connector table'
+            output_dict['items'] = None
+            return output_dict, 403
 
         if not connector.check_board_id(board_id):
-            forbidden("Permission denied")
+            output_dict['msg'] = 'permission denied'
+            output_dict['items'] = None
+            return output_dict, 403
 
         # TODO: pagination is needed
-        return Article.query.filter(Article.board_id == board_id).all()
+        output_dict['msg'] = 'successfully loaded'
+        output_dict['items'] = Article.query.filter(Article.board_id == board_id).all()
+        return output_dict
 
     @api.expect(parser, resource_fields)
     def post(self):
@@ -98,8 +118,16 @@ class ArticleListView(Resource):
         """
         data = request.json
         board_id = request.args.get('board_id')
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
+
         if not board_id:
             raise BoardIdNotExistException('board_id is mandatory!')
+
+        if connector is None:
+            return jsonify({'msg': 'permission denied'}), 403
+
+        if not connector.check_board_id(board_id):
+            return jsonify({'msg': 'permission denied'}), 403
 
         article = Article(title=data['title'], body=data['body'], board_id=board_id)
 
