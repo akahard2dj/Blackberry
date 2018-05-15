@@ -29,13 +29,18 @@ class UserBoardConnector(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     board_id_str = db.Column(db.Text)
 
-    # set_xx 메소드를 사용할건지 @board_id.setter를 사용할지 정하고 한 가지 방식을 쓰는게 안헷갈릴것 같네요~
-    def set_board_id(self, board_id):
+    @property
+    def board_id(self):
+        value = self.board_id_str
+        return list(map(int, value.split(',')[:-1]))
+
+    @board_id.setter
+    def board_id(self, new_board_id: int):
         value = self.board_id_str
         if not value:
-            value = '{board_id},'.format(board_id=board_id)
+            value = '{board_id},'.format(board_id=new_board_id)
         else:
-            value += '{board_id},'.format(board_id=board_id)
+            value += '{board_id},'.format(board_id=new_board_id)
 
         id_list = list(map(int, value.split(',')[:-1]))
         id_list = sorted(set(id_list))
@@ -47,12 +52,7 @@ class UserBoardConnector(db.Model):
             db.session.rollback()
             raise exc.SQLAlchemyError
 
-    # get_xx 메소드를 사용할 것인지 아니면 @getter를 사용할지 정하고 한 가지 방식을 쓰는게 안헷갈릴것 같네요~
-    def get_board_id(self):
-        value = self.board_id_str
-        return list(map(int, value.split(',')[:-1]))
-
-    def pop_board_id(self, board_id):
+    def pop_board_id(self, board_id: int):
         value = self.board_id_str
         id_list = list(map(int, value.split(',')[:-1]))
         if board_id in id_list:
@@ -66,7 +66,7 @@ class UserBoardConnector(db.Model):
                 db.session.rollback()
                 raise exc.SQLAlchemyError
 
-    def check_board_id(self, board_id):
+    def check_board_id(self, board_id: int) -> bool:
         if not self.board_id_str:
             return False
 
