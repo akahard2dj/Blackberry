@@ -33,6 +33,7 @@ def create_app(config_name):
     from app.api.v1.authentications.views import api
     from app.api.v1.boards.views import api
     from app.api.v1.users.views import api
+    from app.api.v1.common.exception import handler
 
     db.init_app(app)
 

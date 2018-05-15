@@ -3,10 +3,10 @@ from flask_restplus import Resource, fields, marshal_with
 
 from app import db, get_api
 from app.api.v1.authentications.authentication import auth
-from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import UserBoardConnector
-from app.api.v1.articles.exceptions import ArticleNotFoundException, BoardIdNotExistException
 from app.api.v1.articles.models import Article
+from app.api.v1.common.exception.exceptions import AccountException, CommonException
+from app.api.v1.common.views import ResponseWrapper
 
 api = get_api()
 
@@ -30,13 +30,13 @@ article_list_fields = {
 }
 
 article_response = {
-    'msg': fields.String,
-    'items': fields.Nested(article_fields)
+    'message': fields.String,
+    'data': fields.Nested(article_fields)
 }
 
 article_list_response = {
-    'msg': fields.String,
-    'items': fields.List(fields.Nested(article_list_fields))
+    'message': fields.String,
+    'data': fields.List(fields.Nested(article_list_fields))
 }
 
 
@@ -59,10 +59,9 @@ class ArticleView(Resource):
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
 
         if not article:
-            raise ArticleNotFoundException("No article found with articleId: {}".format(article_id))
-
+            raise CommonException("No article found with articleId: {}".format(article_id))
         if not connector.check_board_id(article.board_id):
-            forbidden('Permission denied')
+            raise AccountException('Permission denied')
 
         return article
 
@@ -90,23 +89,14 @@ class ArticleListView(Resource):
         board_id = request.args.get('board_id')
 
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-
-        output_dict = dict()
-        # TODO: connector 가 None 일 때 처리 필요 -> solved
         if connector is None:
-            output_dict['msg'] = 'permission denied: There is no user data on connector table'
-            output_dict['items'] = None
-            return output_dict, 403
-
+            raise AccountException('permission denied: There is no user data on connector table')
         if not connector.check_board_id(board_id):
-            output_dict['msg'] = 'permission denied'
-            output_dict['items'] = None
-            return output_dict, 403
+            raise AccountException('permission denied')
 
         # TODO: pagination is needed
-        output_dict['msg'] = 'successfully loaded'
-        output_dict['items'] = Article.query.filter(Article.board_id == board_id).all()
-        return output_dict
+        items = Article.query.filter(Article.board_id == board_id).all()
+        return ResponseWrapper.ok('successfully loaded', items)
 
     @api.expect(parser, resource_fields)
     def post(self):
@@ -121,25 +111,17 @@ class ArticleListView(Resource):
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
 
         if not board_id:
-            raise BoardIdNotExistException('board_id is mandatory!')
-
+            raise CommonException('board_id is mandatory!')
         if connector is None:
-            return jsonify({'msg': 'permission denied'}), 403
-
+            raise AccountException('Permission denied')
         if not connector.check_board_id(board_id):
-            return jsonify({'msg': 'permission denied'}), 403
+            raise AccountException('Permission denied')
 
         article = Article(title=data['title'], body=data['body'], board_id=board_id)
 
         db.session.add(article)
         db.session.commit()
 
-        return {"id": article.id}
+        return ResponseWrapper.ok('successfully loaded', {"id": article.id})
 
-
-@api.errorhandler(ArticleNotFoundException)
-def handle_not_found_article_exception(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
 

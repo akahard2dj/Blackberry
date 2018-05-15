@@ -3,9 +3,8 @@ from flask_restplus import Resource, fields, marshal_with
 
 from app import get_api
 from app.api.v1.authentications.authentication import auth
-from app.api.v1.authentications.errors import forbidden
 from app.api.v1.boards.models import Board, UserBoardConnector
-
+from app.api.v1.common.exception.exceptions import AccountException
 
 api = get_api()
 
@@ -31,5 +30,5 @@ class BoardView(Resource):
         if connector.check_board_id(board_id):
             return Board.query.filter(Board.id == board_id).first()
         else:
-            forbidden("Permission denied")
+            raise AccountException("Permission denied")
 

@@ -4,10 +4,11 @@ from flask import g
 from flask_restplus import marshal_with, fields, Resource, reqparse
 
 from app import db, get_api
+from app.api.v1.common.exception.exceptions import AccountException
 from app.api.v1.users.models import User
 
 from app.api.v1.authentications.authentication import auth
-from app.api.v1.authentications.errors import forbidden, unauthorized, bad_request
+from app.api.v1.authentications.errors import bad_request
 
 api = get_api()
 
@@ -33,8 +34,8 @@ class UserSearchApi(Resource):
     def get(self, user_id):
         if g.current_user.id == user_id:
             return User.query.filter(User.id == user_id).first()
-        else:
-            forbidden('Invalid User ID')
+
+        raise AccountException('Invalid User ID')
 
 
 @api.route('/users')
