@@ -70,4 +70,4 @@ class UserBoardConnector(db.Model):
         if not self.board_id_str:
             return False
 
-        return board_id in set(self.board_id_str.split(',')[:-1])
+        return str(board_id) in set(self.board_id_str.split(',')[:-1])

@@ -12,7 +12,7 @@ from app.api.v1.common.views import ResponseWrapper
 
 api = get_api()
 
-article_fields = {
+'''article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
         'board_id': fields.Integer,
         'title': fields.String,
@@ -39,7 +39,7 @@ article_response = {
 article_list_response = {
     'message': fields.String,
     'data': fields.List(fields.Nested(article_list_fields))
-}
+}'''
 
 
 @api.route('/articles/<int:article_id>')
@@ -50,7 +50,6 @@ class ArticleView(Resource):
     parser.add_argument('board_id', type=int)
 
     @api.expect(parser)
-    @marshal_with(article_fields)
     def get(self, article_id: int):
         """ 해당 게시글 리턴한다.
 
@@ -81,7 +80,6 @@ class ArticleListView(Resource):
     })
 
     @api.expect(parser)
-    @marshal_with(article_list_response)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다.
 
