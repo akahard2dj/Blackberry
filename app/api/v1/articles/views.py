@@ -98,8 +98,7 @@ class ArticleListView(Resource):
 
         # TODO: pagination is needed
         articles = Article.query.order_by(desc(Article.created_at)).all()
-        items = Article.query.filter(Article.board_id == board_id).all()
-        return ResponseWrapper.ok('successfully loaded', articles)
+        return ResponseWrapper.ok(data=articles)
 
     @api.expect(parser, resource_fields)
     def post(self):
@@ -125,6 +124,6 @@ class ArticleListView(Resource):
         db.session.add(article)
         db.session.commit()
 
-        return ResponseWrapper.ok('successfully loaded', {"id": article.id})
+        return ResponseWrapper.ok(data={"id": article.id})
 
 

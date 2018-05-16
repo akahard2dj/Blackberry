@@ -8,19 +8,11 @@ api = get_api()
 
 class ResponseWrapper:
     @staticmethod
-    def ok(*args):
-        if len(args) == 1 and isinstance(args[0], str):
-            result = dict()
-            result['message'] = args[0]
-            return result, 200
-        elif len(args) == 2 and isinstance(args[1], object):
-            result = dict()
-            result['message'] = args[0]
-            result['data'] = args[1]
-            return result, 200
-        else:
-            # TODO: right raise error is needed
-            raise AttributeError
+    def ok(message: str='success', data: object=None):
+        result = dict()
+        result['message'] = message
+        result['data'] = data
+        return result
 
 
 @api.route('/hello')
