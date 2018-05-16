@@ -5,6 +5,7 @@ from app import get_api
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import Board, UserBoardConnector
 from app.api.v1.common.exception.exceptions import AccountException
+from app.api.v1.common.views import ResponseWrapper
 
 api = get_api()
 
@@ -27,8 +28,10 @@ class BoardView(Resource):
         :return: 게시판
         """
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-        if connector.check_board_id(board_id):
-            return Board.query.filter(Board.id == board_id).first()
-        else:
+        if not connector.check_board_id(board_id):
             raise AccountException("Permission denied")
+
+        board = Board.query.filter(Board.id == board_id).first()
+        return ResponseWrapper.ok(data=board)
+
 

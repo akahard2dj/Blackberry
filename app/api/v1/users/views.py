@@ -4,11 +4,11 @@ from flask import g
 from flask_restplus import marshal_with, fields, Resource, reqparse
 
 from app import db, get_api
-from app.api.v1.common.exception.exceptions import AccountException
+from app.api.v1.common.exception.exceptions import AccountException, CommonException
+from app.api.v1.common.views import ResponseWrapper
 from app.api.v1.users.models import User
 
 from app.api.v1.authentications.authentication import auth
-from app.api.v1.authentications.errors import bad_request
 
 api = get_api()
 
@@ -33,7 +33,8 @@ class UserSearchApi(Resource):
     @marshal_with(user_field)
     def get(self, user_id):
         if g.current_user.id == user_id:
-            return User.query.filter(User.id == user_id).first()
+            user = User.query.filter(User.id == user_id).first()
+            return ResponseWrapper.ok(data=user)
 
         raise AccountException('Invalid User ID')
 
@@ -46,23 +47,18 @@ class UserRegistrationApi(Resource):
     def post(self):
         args = user_register_parser.parse_args()
 
-        # TODO: validate data
         # Email Validation is confirmed by regex
         if not self.EMAIL_REGEX.match(args.email):
-            bad_request('Email Validation is failed')
+            raise CommonException('Email Validation is failed!')
 
         user = User(username=args.username, password=args.password, email=args.email)
         db.session.add(user)
 
-        commit_flag = True
         try:
             db.session.commit()
+            return ResponseWrapper.ok(data=user)
         except Exception as e:
             db.session.rollback()
             db.session.flush()
-            commit_flag = False
 
-        if commit_flag:
-            return user
-        else:
-            bad_request('internal server error')
+        raise CommonException('db save failed!')

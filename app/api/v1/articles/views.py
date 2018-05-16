@@ -65,7 +65,7 @@ class ArticleView(Resource):
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
 
-        return article
+        return ResponseWrapper.ok(data=article)
 
 
 @api.route('/articles')
