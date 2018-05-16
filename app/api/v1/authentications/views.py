@@ -10,6 +10,7 @@ from app.api.common.utils import random_digit_with_number, random_number
 
 from app.api.v1.authentications.authentication import auth_basic
 from app.api.v1.authentications.errors import bad_request
+from app.api.v1.common.views import ResponseWrapper
 from app.api.v1.users.models import User, University, UniversityBoardTags, UserToken
 from app.api.v1.boards.models import UserBoardConnector
 
@@ -30,7 +31,7 @@ class TokenApi(Resource):
                 db.session.commit()
             except Exception as e:
                 bad_request("Internal Error")
-            return jsonify({'token': token.token, 'nonce': token.nonce})
+            return ResponseWrapper.ok(data={'token': token.token, 'nonce': token.nonce})
         else:
             return jsonify({'msg': 'Token already has been issued'})
 
@@ -150,7 +151,7 @@ class ConfirmAuthKeyApi(Resource):
                         res_from_cache['usertype'] = 'OLD'
                         cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
 
-                    return jsonify({'msg': 'Success'})
+                    return ResponseWrapper.ok()
                 else:
                     return bad_request('invalid auth_code')
 
@@ -207,7 +208,7 @@ class RegistrationApi(Resource):
                                 db.session.commit()
                             except Exception as e:
                                 return bad_request('internal error')
-                            return jsonify({'msg': 'registration is ok'})
+                            return ResponseWrapper.ok()
                         if res_from_cache['usertype'] == 'OLD':
                             registered_user = User.query.filter(User.email == email).first()
                             user_token = UserToken.query.filter(UserToken.user_id == registered_user.id).first()
@@ -223,7 +224,7 @@ class RegistrationApi(Resource):
                             cache.set('auth_key:{}'.format(email), res_from_cache, timeout=1800)
 
                             db.session.commit()
-                            return jsonify({'msg': 'registration is ok'})
+                            return ResponseWrapper.ok()
                     else:
                         bad_request('auth code is not confirmed')
 

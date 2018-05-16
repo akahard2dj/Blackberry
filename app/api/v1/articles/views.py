@@ -58,10 +58,10 @@ class ArticleView(Resource):
         :return: 게시글
         """
         article = Article.query.filter(Article.id == article_id).first()
-        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-
         if not article:
             raise CommonException("No article found with articleId: {}".format(article_id))
+
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
 
@@ -110,10 +110,10 @@ class ArticleListView(Resource):
         """
         data = request.json
         board_id = request.args.get('board_id')
-        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-
         if not board_id:
             raise CommonException('board_id is mandatory!')
+
+        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
         if connector is None:
             raise AccountException('Permission denied')
         if not connector.check_board_id(board_id):
