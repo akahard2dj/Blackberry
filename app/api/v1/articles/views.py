@@ -95,7 +95,7 @@ class ArticleListView(Resource):
             raise AccountException('permission denied')
 
         # TODO: pagination is needed
-        articles = Article.query.order_by(desc(Article.created_at)).all()
+        articles = Article.query.filter(Article.board_id == board_id).order_by(desc(Article.created_at)).all()
         return ResponseWrapper.ok(data=articles)
 
     @api.expect(parser, resource_fields)
