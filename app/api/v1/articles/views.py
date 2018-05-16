@@ -1,5 +1,7 @@
-from flask import request, jsonify, g
+from flask import request, g
 from flask_restplus import Resource, fields, marshal_with
+
+from sqlalchemy import desc
 
 from app import db, get_api
 from app.api.v1.authentications.authentication import auth
@@ -95,8 +97,9 @@ class ArticleListView(Resource):
             raise AccountException('permission denied')
 
         # TODO: pagination is needed
+        articles = Article.query.order_by(desc(Article.created_at)).all()
         items = Article.query.filter(Article.board_id == board_id).all()
-        return ResponseWrapper.ok('successfully loaded', items)
+        return ResponseWrapper.ok('successfully loaded', articles)
 
     @api.expect(parser, resource_fields)
     def post(self):
