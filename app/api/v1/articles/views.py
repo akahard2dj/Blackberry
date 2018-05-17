@@ -1,5 +1,5 @@
 from flask import request, g
-from flask_restplus import Resource, fields, marshal_with
+from flask_restplus import Resource, fields
 
 from sqlalchemy import desc
 
@@ -84,7 +84,7 @@ class ArticleListView(Resource):
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다.
 
-        :param board_id: 게시판 아이디
+        board_id: 게시판 아이디
         :return: article list(msg, items)
         """
         board_id = request.args.get('board_id')
@@ -105,7 +105,7 @@ class ArticleListView(Resource):
         """
         게시판에 글을 작성한다
 
-        :param board_id: 게시판 아이디
+        board_id: 게시판 아이디
         :return:
         """
         data = request.json
