@@ -8,7 +8,7 @@ from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.models import Article
 from app.api.v1.common.exception.exceptions import AccountException, CommonException
-from app.api.v1.common.views import ResponseWrapper
+from app.api.v1.common.views import ResponseWrapper, row2dict, rows2dict
 
 api = get_api()
 
@@ -64,7 +64,8 @@ class ArticleView(Resource):
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
 
-        return ResponseWrapper.ok(data=article)
+        res = row2dict(article, fields={'id', 'title', 'board_id', 'hits_count', 'likes_count', 'dislike_count'})
+        return ResponseWrapper.ok(data=res)
 
 
 @api.route('/articles')
@@ -96,7 +97,8 @@ class ArticleListView(Resource):
 
         # TODO: pagination is needed
         articles = Article.query.filter(Article.board_id == board_id).order_by(desc(Article.created_at)).all()
-        return ResponseWrapper.ok(data=articles)
+        res = rows2dict(articles, fields={'id', 'title', 'board_id', 'hits_count', 'likes_count', 'dislike_count'})
+        return ResponseWrapper.ok(data=res)
 
     @api.expect(parser, resource_fields)
     def post(self):
@@ -118,7 +120,6 @@ class ArticleListView(Resource):
             raise AccountException('Permission denied')
 
         article = Article(title=data['title'], body=data['body'], board_id=board_id)
-
         db.session.add(article)
         db.session.commit()
 
