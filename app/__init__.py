@@ -28,12 +28,12 @@ def create_app(config_name):
     app.register_blueprint(api_blueprint)
     _api_holder.append(api)
 
-    from app.api.v1.common.views import api
     from app.api.v1.articles.views import api
     from app.api.v1.authentications.views import api
     from app.api.v1.boards.views import api
     from app.api.v1.users.views import api
     from app.api.v1.common.exception import handler
+    from app.api.v1.developer.views import api
 
     db.init_app(app)
 
