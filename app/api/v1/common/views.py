@@ -27,14 +27,6 @@ class ResponseWrapper:
     def ok(message: str='success', data: object=None):
         result = dict()
         result['message'] = message
-
-        '''if data:
-            if isinstance(data, dict):
-                data = data
-            elif isinstance(data, Iterable):
-                data = [row2dict(row) for row in data]
-            else:
-                data = row2dict(data)'''
         result['data'] = data
         return result
 
