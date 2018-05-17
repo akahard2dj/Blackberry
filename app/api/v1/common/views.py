@@ -7,7 +7,7 @@ from app import cache, get_api
 api = get_api()
 
 
-def row2dict(row, fields: set=None):
+def row2dict(row, fields: set=set()):
     d = {}
     for column in row.__table__.columns:
         if column.name in fields:
@@ -15,7 +15,7 @@ def row2dict(row, fields: set=None):
     return d
 
 
-def rows2dict(rows, fields: set=None):
+def rows2dict(rows, fields: set=set()):
     arr = []
     for row in rows:
         arr.append(row2dict(row, fields))
