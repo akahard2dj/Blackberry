@@ -108,8 +108,11 @@ class ArticleListView(Resource):
         board_id: 게시판 아이디
         :return:
         """
-        data = request.json
-        board_id = request.args.get('board_id')
+
+        query_parameter = self.parser.parse_args()
+        body_data = request.json
+        board_id = query_parameter['board_id']
+
         if not board_id:
             raise CommonException('board_id is mandatory!')
 
@@ -119,7 +122,7 @@ class ArticleListView(Resource):
         if not connector.check_board_id(board_id):
             raise AccountException('Permission denied')
 
-        article = Article(title=data['title'], body=data['body'], board_id=board_id)
+        article = Article(title=body_data['title'], body=body_data['body'], board_id=board_id)
         db.session.add(article)
         db.session.commit()
 
