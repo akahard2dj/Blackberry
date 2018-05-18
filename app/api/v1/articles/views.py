@@ -8,7 +8,7 @@ from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.models import Article
 from app.api.v1.common.exception.exceptions import AccountException, CommonException
-from app.api.v1.common.views import ResponseWrapper, row2dict, rows2dict
+from app.api.v1.common.views import ResponseWrapper
 
 api = get_api()
 
@@ -43,20 +43,15 @@ article_list_response = {
 
 
 @api.route('/articles/<int:article_id>')
-@api.header('Authorization', 'Token', required=True)
+@api.header('Authorization', 'Token 정보', required=True)
 class ArticleView(Resource):
-    decorators = [auth.login_required]
-    parser = api.parser()
-    parser.add_argument('board_id', type=int)
 
-    @api.expect(parser)
+    decorators = [auth.login_required]
+
     @marshal_with(article_response)
     def get(self, article_id: int):
-        """ 해당 게시글 리턴한다.
+        """ 해당 게시글 리턴한다. """
 
-        :param article_id: 게시글 아이디
-        :return: 게시글
-        """
         article = Article.query.filter(Article.id == article_id).first()
         if not article:
             raise CommonException("No article found with articleId: {}".format(article_id))
@@ -80,26 +75,20 @@ class ArticleView(Resource):
 @api.route('/articles')
 @api.header('Authorization', '발급된 사용자 토큰', required=True)
 class ArticleListView(Resource):
+
     decorators = [auth.login_required]
+
     parser = api.parser()
-    parser.add_argument('board_id', type=int, required=True)
+    parser.add_argument('board_id', type=int, required=True, help='게시판 아이디')
     parser.add_argument('query_id', type=int)
     parser.add_argument('page', type=int)
     parser.add_argument('articles_per_page', type=int)
 
-    resource_fields = api.model('Resource', {
-        'title': fields.String,
-        'body': fields.String,
-    })
-
     @api.expect(parser)
     @marshal_with(article_list_response)
     def get(self):
-        """ 해당 게시판의 글 목록을 리턴한다.
+        """ 해당 게시판의 글 목록을 리턴한다. """
 
-        board_id: 게시판 아이디
-        :return: article list(msg, items)
-        """
         query_args = self.parser.parse_args()
 
         board_id = query_args["board_id"]
@@ -136,14 +125,17 @@ class ArticleListView(Resource):
             .offset((page-1)*articles_per_page)
         return ResponseWrapper.ok(data=articles)
 
-    @api.expect(parser, resource_fields)
-    def post(self):
-        """
-        게시판에 글을 작성한다
+    parser = api.parser()
+    parser.add_argument('board_id', type=int, required=True, help='게시판 아이디')
 
-        board_id: 게시판 아이디
-        :return:
-        """
+    article_request_body = api.model('ArticleRequestBody', {
+        'title': fields.String,
+        'body': fields.String,
+    })
+
+    @api.expect(parser, article_request_body)
+    def post(self):
+        """ 게시판에 글을 작성한다 """
 
         query_parameter = self.parser.parse_args()
         body_data = request.json
