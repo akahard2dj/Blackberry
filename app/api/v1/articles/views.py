@@ -1,5 +1,5 @@
 from flask import request, g
-from flask_restplus import Resource, fields
+from flask_restplus import Resource, fields, marshal_with
 
 from sqlalchemy import desc
 
@@ -12,7 +12,7 @@ from app.api.v1.common.views import ResponseWrapper, row2dict, rows2dict
 
 api = get_api()
 
-'''article_fields = {
+article_fields = {
         'status': fields.String(attribute=lambda x: x.status.name),
         'board_id': fields.Integer,
         'title': fields.String,
@@ -39,7 +39,7 @@ article_response = {
 article_list_response = {
     'message': fields.String,
     'data': fields.List(fields.Nested(article_list_fields))
-}'''
+}
 
 
 @api.route('/articles/<int:article_id>')
@@ -50,6 +50,7 @@ class ArticleView(Resource):
     parser.add_argument('board_id', type=int)
 
     @api.expect(parser)
+    @marshal_with(article_response)
     def get(self, article_id: int):
         """ 해당 게시글 리턴한다.
 
@@ -64,8 +65,16 @@ class ArticleView(Resource):
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
 
-        res = row2dict(article, fields={'id', 'title', 'board_id', 'hits_count', 'likes_count', 'dislike_count'})
-        return ResponseWrapper.ok(data=res)
+        if not article.increase_hits_count():
+            raise CommonException("Server is not response")
+
+        return ResponseWrapper.ok(data=article)
+
+    def put(self):
+        pass
+
+    def delete(self):
+        pass
 
 
 @api.route('/articles')
@@ -73,7 +82,10 @@ class ArticleView(Resource):
 class ArticleListView(Resource):
     decorators = [auth.login_required]
     parser = api.parser()
-    parser.add_argument('board_id', type=int)
+    parser.add_argument('board_id', type=int, required=True)
+    parser.add_argument('query_id', type=int)
+    parser.add_argument('page', type=int)
+    parser.add_argument('articles_per_page', type=int)
 
     resource_fields = api.model('Resource', {
         'title': fields.String,
@@ -81,13 +93,16 @@ class ArticleListView(Resource):
     })
 
     @api.expect(parser)
+    @marshal_with(article_list_response)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다.
 
         board_id: 게시판 아이디
         :return: article list(msg, items)
         """
-        board_id = request.args.get('board_id')
+        query_args = self.parser.parse_args()
+
+        board_id = query_args["board_id"]
 
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
         if connector is None:
@@ -95,10 +110,31 @@ class ArticleListView(Resource):
         if not connector.check_board_id(board_id):
             raise AccountException('permission denied')
 
-        # TODO: pagination is needed
-        articles = Article.query.filter(Article.board_id == board_id).order_by(desc(Article.created_at)).all()
-        res = rows2dict(articles, fields={'id', 'title', 'board_id', 'hits_count', 'likes_count', 'dislike_count'})
-        return ResponseWrapper.ok(data=res)
+        if query_args["page"] is None:
+            page = 1
+        else:
+            page = query_args["page"]
+
+        if query_args["articles_per_page"] is None:
+            articles_per_page = 10
+        else:
+            articles_per_page = query_args["articles_per_page"]
+
+        if page == 1:
+            article_query = Article.query\
+                .filter(Article.board_id == board_id)\
+                .order_by(desc(Article.created_at)).first()
+            query_id = article_query.id
+        else:
+            query_id = query_args["query_id"]
+
+        articles = Article.query\
+            .filter(Article.board_id == board_id)\
+            .filter(Article.id <= query_id)\
+            .order_by(desc(Article.created_at))\
+            .limit(articles_per_page)\
+            .offset((page-1)*articles_per_page)
+        return ResponseWrapper.ok(data=articles)
 
     @api.expect(parser, resource_fields)
     def post(self):
