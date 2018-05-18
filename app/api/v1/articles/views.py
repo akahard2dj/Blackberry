@@ -50,25 +50,33 @@ class ArticleView(Resource):
 
     @marshal_with(article_response)
     def get(self, article_id: int):
-        """ 해당 게시글 리턴한다. """
+        """ 해당 게시글 조회한다. """
 
         article = Article.query.filter(Article.id == article_id).first()
+        self.validate(article, article_id)
+        article.increase_hits_count()
+
+        return ResponseWrapper.ok(data=article)
+
+    def put(self, article_id: int):
+        pass
+
+    def delete(self, article_id: int):
+        """ 해당 게시글을 삭제한다. """
+
+        article = Article.query.filter(Article.id == article_id).first()
+        self.validate(article, article_id)
+        article.delete()
+
+        return ResponseWrapper.ok()
+
+    def validate(self, article, article_id):
         if not article:
             raise CommonException("No article found with articleId: {}".format(article_id))
 
         connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
-
-        article.increase_hits_count()
-
-        return ResponseWrapper.ok(data=article)
-
-    def put(self):
-        pass
-
-    def delete(self):
-        pass
 
 
 @api.route('/articles')

@@ -33,6 +33,10 @@ class Article(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def delete(self):
+        self.deleted = YesOrNo.Y
+        db.session.add(self)
+        db.session.commit()
 
 '''
 class ArticleDTO(object):
