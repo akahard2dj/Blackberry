@@ -99,12 +99,12 @@ class ArticleListView(Resource):
         if not connector.check_board_id(board_id):
             raise AccountException('permission denied')
 
-        if query_args["page"] is None:
+        if query_args.get('page') is None:
             page = 1
         else:
             page = query_args["page"]
 
-        if query_args["articles_per_page"] is None:
+        if query_args.get('articles_per_page') is None:
             articles_per_page = 10
         else:
             articles_per_page = query_args["articles_per_page"]
@@ -115,7 +115,8 @@ class ArticleListView(Resource):
                 .order_by(desc(Article.created_at)).first()
             query_id = article_query.id
         else:
-            query_id = query_args["query_id"]
+            # FIXME: query_id가 없으면 동작하지 않음.
+            query_id = query_args.get("query_id")
 
         articles = Article.query\
             .filter(Article.board_id == board_id)\
