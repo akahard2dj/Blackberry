@@ -28,19 +28,10 @@ class Article(db.Model):
         db.session.add(self)
         db.session.commit()
 
-        return True
-
     def increase_hits_count(self):
         self.hits_count = self.hits_count + 1
         db.session.add(self)
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            db.session.flush()
-            return False
-
-        return True
+        db.session.commit()
 
 
 '''

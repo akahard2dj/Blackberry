@@ -60,8 +60,7 @@ class ArticleView(Resource):
         if not connector.check_board_id(article.board_id):
             raise AccountException('Permission denied')
 
-        if not article.increase_hits_count():
-            raise CommonException("Server is not response")
+        article.increase_hits_count()
 
         return ResponseWrapper.ok(data=article)
 
