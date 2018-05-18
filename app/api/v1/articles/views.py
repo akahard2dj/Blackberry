@@ -13,7 +13,7 @@ from app.api.v1.common.views import ResponseWrapper
 api = get_api()
 
 article_fields = {
-        'status': fields.String(attribute=lambda x: x.status.name),
+        'reported': fields.String,
         'board_id': fields.Integer,
         'title': fields.String,
         'body': fields.String,
