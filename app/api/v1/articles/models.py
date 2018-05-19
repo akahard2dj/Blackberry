@@ -23,20 +23,7 @@ class Article(db.Model):
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def update_timestamp(self):
-        self.updated_at = datetime.utcnow()
-        db.session.add(self)
-        db.session.commit()
 
-    def increase_hits_count(self):
-        self.hits_count = self.hits_count + 1
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        self.deleted = YesOrNo.Y
-        db.session.add(self)
-        db.session.commit()
 
 '''
 class ArticleDTO(object):

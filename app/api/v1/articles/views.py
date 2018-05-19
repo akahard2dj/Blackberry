@@ -4,6 +4,7 @@ from flask_restplus import Resource, fields, marshal_with
 from sqlalchemy import desc
 
 from app import db, get_api
+from app.api.v1.articles import service
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.models import Article
@@ -52,11 +53,7 @@ class ArticleView(Resource):
     def get(self, article_id: int):
         """ 해당 게시글 조회한다. """
 
-        article = Article.query.filter(Article.id == article_id).first()
-        self.validate(article, article_id)
-        article.increase_hits_count()
-
-        return ResponseWrapper.ok(data=article)
+        return ResponseWrapper.ok(data=service.get_article_with_id(article_id))
 
     def put(self, article_id: int):
         pass
@@ -64,19 +61,8 @@ class ArticleView(Resource):
     def delete(self, article_id: int):
         """ 해당 게시글을 삭제한다. """
 
-        article = Article.query.filter(Article.id == article_id).first()
-        self.validate(article, article_id)
-        article.delete()
-
+        service.delete_article_with_id(article_id)
         return ResponseWrapper.ok()
-
-    def validate(self, article, article_id):
-        if not article:
-            raise CommonException("No article found with articleId: {}".format(article_id))
-
-        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-        if not connector.check_board_id(article.board_id):
-            raise AccountException('Permission denied')
 
 
 @api.route('/articles')
