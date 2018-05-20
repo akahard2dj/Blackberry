@@ -127,19 +127,7 @@ class ArticleListView(Resource):
         body_data = request.json
         board_id = query_parameter['board_id']
 
-        if not board_id:
-            raise CommonException('board_id is mandatory!')
-
-        connector = UserBoardConnector.query.filter(UserBoardConnector.user_id == g.current_user.id).first()
-        if connector is None:
-            raise AccountException('Permission denied')
-        if not connector.check_board_id(board_id):
-            raise AccountException('Permission denied')
-
-        article = Article(title=body_data['title'], body=body_data['body'], board_id=board_id)
-        db.session.add(article)
-        db.session.commit()
-
-        return ResponseWrapper.ok(data={"id": article.id})
+        return ResponseWrapper.ok(data=service.create_article(
+            body_data['title'], body_data['body'], board_id, g.current_user.id))
 
 
