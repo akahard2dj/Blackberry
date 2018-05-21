@@ -40,6 +40,5 @@ def verify_password(email, password):
 
 
 @auth_basic.error_handler
-def auth_error():
+def auth_basic_error():
     raise AccountException('Invalid credentials')
-

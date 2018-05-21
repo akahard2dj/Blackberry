@@ -33,5 +33,3 @@ class BoardView(Resource):
 
         board = Board.query.filter(Board.id == board_id).first()
         return ResponseWrapper.ok(data=board)
-
-

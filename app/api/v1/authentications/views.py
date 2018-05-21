@@ -1,6 +1,4 @@
-import re
-
-from flask import g, jsonify, request
+from flask import g, jsonify
 from flask_restplus import Resource, inputs
 
 from app import cache, get_api

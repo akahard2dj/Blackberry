@@ -1,45 +1,40 @@
-from flask import request, g, jsonify
+from flask import request, g
 from flask_restplus import Resource, fields, marshal_with
 
 from sqlalchemy import desc, and_
 
-from app import db, get_api
+from app import get_api
 from app.api.v1.articles import service
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
 from app.api.v1.articles.models import Article, ArticleListSchema
-from app.api.v1.common.exception.exceptions import AccountException, CommonException
+from app.api.v1.common.exception.exceptions import AccountException
 from app.api.v1.common.views import ResponseWrapper
 
 api = get_api()
 
 article_fields = {
-        'reported': fields.String,
-        'board_id': fields.Integer,
-        'title': fields.String,
-        'body': fields.String,
-        'hits_count': fields.Integer,
-        'likes_count': fields.Integer,
-        'dislike_count': fields.Integer,
-        'created_at': fields.DateTime,
-        'updated_at': fields.DateTime
+    'reported': fields.String,
+    'board_id': fields.Integer,
+    'title': fields.String,
+    'body': fields.String,
+    'hits_count': fields.Integer,
+    'likes_count': fields.Integer,
+    'dislike_count': fields.Integer,
+    'created_at': fields.DateTime,
+    'updated_at': fields.DateTime
 }
 
 article_list_fields = {
-        'id': fields.Integer,
-        'title': fields.String,
-        'hits_count': fields.Integer,
-        'created_at': fields.DateTime
+    'id': fields.Integer,
+    'title': fields.String,
+    'hits_count': fields.Integer,
+    'created_at': fields.DateTime
 }
 
 article_response = {
     'message': fields.String,
     'data': fields.Nested(article_fields)
-}
-
-article_list_response = {
-    'message': fields.String,
-    'data': fields.List(fields.Nested(article_list_fields))
 }
 
 
@@ -78,7 +73,6 @@ class ArticleListView(Resource):
     parser.add_argument('articles_per_page', type=int)
 
     @api.expect(parser)
-    #@marshal_with(article_list_response)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다. """
 
@@ -107,7 +101,7 @@ class ArticleListView(Resource):
             .order_by(desc(Article.created_at)) \
             .filter(and_(Article.board_id == board_id, Article.id <= query_id))\
             .limit(articles_per_page)\
-            .offset((page-1)*articles_per_page)
+            .offset((page - 1) * articles_per_page)
         article_list_schema = ArticleListSchema(many=True)
         return ResponseWrapper.ok(data=article_list_schema.dump(articles).data)
 
@@ -129,5 +123,3 @@ class ArticleListView(Resource):
 
         return ResponseWrapper.ok(data=service.create_article(
             body_data['title'], body_data['body'], board_id, g.current_user.id))
-
-

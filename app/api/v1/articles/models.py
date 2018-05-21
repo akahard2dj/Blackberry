@@ -4,6 +4,7 @@ from datetime import datetime
 from app import db
 from app import ma
 
+
 class YesOrNo(enum.Enum):
     Y = 'Y'
     N = 'N'
