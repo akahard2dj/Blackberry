@@ -1,13 +1,13 @@
-from flask import request, g
+from flask import request, g, jsonify
 from flask_restplus import Resource, fields, marshal_with
 
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 
 from app import db, get_api
 from app.api.v1.articles import service
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
-from app.api.v1.articles.models import Article
+from app.api.v1.articles.models import Article, ArticleListSchema
 from app.api.v1.common.exception.exceptions import AccountException, CommonException
 from app.api.v1.common.views import ResponseWrapper
 
@@ -78,7 +78,7 @@ class ArticleListView(Resource):
     parser.add_argument('articles_per_page', type=int)
 
     @api.expect(parser)
-    @marshal_with(article_list_response)
+    #@marshal_with(article_list_response)
     def get(self):
         """ 해당 게시판의 글 목록을 리턴한다. """
 
@@ -103,13 +103,14 @@ class ArticleListView(Resource):
             # FIXME: query_id가 없으면 동작하지 않음.
             query_id = query_args.get("query_id")
 
-        articles = Article.query\
-            .filter(Article.board_id == board_id)\
-            .filter(Article.id <= query_id)\
-            .order_by(desc(Article.created_at))\
+        articles = Article.query \
+            .order_by(desc(Article.created_at)) \
+            .filter(and_(Article.board_id == board_id, Article.id <= query_id))\
             .limit(articles_per_page)\
             .offset((page-1)*articles_per_page)
-        return ResponseWrapper.ok(data=articles)
+        article_list_schema = ArticleListSchema(many=True)
+        return jsonify(article_list_schema.dump(articles).data)
+        #return ResponseWrapper.ok(data=articles)
 
     parser = api.parser()
     parser.add_argument('board_id', type=int, required=True, help='게시판 아이디')

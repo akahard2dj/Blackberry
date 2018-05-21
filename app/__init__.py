@@ -1,6 +1,7 @@
 from flask import Flask, Blueprint
 from flask_restplus import Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 
 from werkzeug.contrib.cache import SimpleCache
 
@@ -8,6 +9,7 @@ from config import config
 
 db = SQLAlchemy()
 cache = SimpleCache()
+ma = Marshmallow()
 _api_holder = []
 
 

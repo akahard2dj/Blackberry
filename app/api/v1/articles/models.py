@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from app import db
-
+from app import ma
 
 class YesOrNo(enum.Enum):
     Y = 'Y'
@@ -23,6 +23,10 @@ class Article(db.Model):
     created_at = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+class ArticleListSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'title', 'hits_count', 'created_at')
 
 
 '''
