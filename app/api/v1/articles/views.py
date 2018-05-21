@@ -109,8 +109,7 @@ class ArticleListView(Resource):
             .limit(articles_per_page)\
             .offset((page-1)*articles_per_page)
         article_list_schema = ArticleListSchema(many=True)
-        return jsonify(article_list_schema.dump(articles).data)
-        #return ResponseWrapper.ok(data=articles)
+        return ResponseWrapper.ok(data=article_list_schema.dump(articles).data)
 
     parser = api.parser()
     parser.add_argument('board_id', type=int, required=True, help='게시판 아이디')
