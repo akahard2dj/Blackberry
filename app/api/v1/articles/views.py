@@ -5,9 +5,10 @@ from sqlalchemy import desc, and_
 
 from app import get_api
 from app.api.v1.articles import service
+from app.api.v1.articles.schema import ArticleListSchema
 from app.api.v1.authentications.authentication import auth
 from app.api.v1.boards.models import UserBoardConnector
-from app.api.v1.articles.models import Article, ArticleListSchema
+from app.api.v1.articles.models import Article
 from app.api.v1.common.exception.exceptions import AccountException
 from app.api.v1.common.views import ResponseWrapper
 
