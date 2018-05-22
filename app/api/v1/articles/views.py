@@ -33,11 +33,6 @@ article_list_fields = {
     'created_at': fields.DateTime
 }
 
-article_response = {
-    'message': fields.String,
-    'data': fields.Nested(article_fields)
-}
-
 
 @api.route('/articles/<int:article_id>')
 @api.header('Authorization', 'Token 정보', required=True)
@@ -45,7 +40,6 @@ class ArticleView(Resource):
 
     decorators = [auth.login_required]
 
-    @marshal_with(article_response)
     def get(self, article_id: int):
         """ 해당 게시글 조회한다. """
 
